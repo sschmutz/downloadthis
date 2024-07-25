@@ -14,7 +14,8 @@ download_this(
   icon = "fa fa-save",
   self_contained = FALSE,
   csv2 = TRUE,
-  ggsave_args = list()
+  ggsave_args = list(),
+  FUN = NULL
 )
 }
 \arguments{
@@ -46,6 +47,10 @@ the \code{output_extension} is chosen as '.csv'. If \code{FALSE},
 
 \item{ggsave_args}{List of arguments to pass to \code{ggplot2::ggsave}, e.g.:
 \code{list(height = 5)}.}
+
+\item{FUN}{Optional function to write the document (must have a \code{x} and
+\code{file} parameter like the \verb{readr::write_*()} family of functions).
+Overwrites \code{csv2} argument.}
 }
 \value{
 \code{htmltools::\link[htmltools]{tag}}, \code{<button>}

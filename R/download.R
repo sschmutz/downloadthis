@@ -26,6 +26,9 @@
 #'   `list(height = 5)`.
 #' @param ... attributes (named arguments) and children (unnamed arguments) of
 #'   the button, passed to `htmltools::tag()`.
+#' @param FUN Optional function to write the document (must have a `x` and
+#'   `file` parameter like the `readr::write_*()` family of functions).
+#'   Overwrites `csv2` argument.
 #'
 #' @return \code{htmltools::\link[htmltools]{tag}}, \code{<button>}
 #' @export
@@ -89,7 +92,8 @@ download_this <- function(.data,
                           icon = "fa fa-save",
                           self_contained = FALSE,
                           csv2 = TRUE,
-                          ggsave_args = list()) {
+                          ggsave_args = list(),
+                          FUN = NULL) {
   UseMethod("download_this")
 }
 
@@ -141,7 +145,8 @@ download_this.data.frame <- function(.data,
                                      button_type = c("default", "primary", "success", "info", "warning", "danger"),
                                      icon = "fa fa-save",
                                      self_contained = FALSE,
-                                     csv2 = TRUE) {
+                                     csv2 = TRUE,
+                                     FUN = NULL) {
   output_extension <- match.arg(output_extension)
   button_type <- match.arg(button_type)
 
@@ -161,11 +166,18 @@ download_this.data.frame <- function(.data,
     fs::file_delete(tmp_file)
   })
 
-  switch(output_extension,
-    ".csv" = ifelse(csv2, readr::write_csv2(x = .data, file = tmp_file), readr::write_csv(x = .data, file = tmp_file)),
-    ".xlsx" = writexl::write_xlsx(x = .data, path = tmp_file),
-    ".rds" = readr::write_rds(x = .data, file = tmp_file)
-  )
+  # write the document, either by a set of predefined functions according the
+  # output_extension and csv2 arguments, or the user defined function FUN
+  if (is.null(FUN)) {
+    switch(output_extension,
+           ".csv" = ifelse(csv2, readr::write_csv2(x = .data, file = tmp_file), readr::write_csv(x = .data, file = tmp_file)),
+           ".xlsx" = writexl::write_xlsx(x = .data, path = tmp_file),
+           ".rds" = readr::write_rds(x = .data, file = tmp_file)
+    )
+  } else {
+    FUN <- match.fun(FUN)
+    FUN(x = .data, file = tmp_file)
+  }
 
   # create button
   create_button(button_label, button_type, output_file, tmp_file, self_contained, icon, ...)
